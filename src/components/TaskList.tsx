@@ -16,7 +16,7 @@ export default function TaskList({
   deleteTask,
 }: Props) {
   if (!tasks.length) {
-    return <p className="text-gray-500">No tasks yet</p>;
+    return <p className="text-gray-500">No tasks</p>;
   }
 
   return (

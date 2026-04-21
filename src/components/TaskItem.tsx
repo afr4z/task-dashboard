@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { useTaskKeyboard } from "../hooks/useTaskKeyboard";
 import type { Task, Priority } from "../types/task";
@@ -16,36 +16,71 @@ export default function TaskItem({ task, updateTask, deleteTask }: Props) {
   const [desc, setDesc] = useState(task.description);
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate);
+  const [error, setError] = useState("");
 
   const ref = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!editing) {
+      setTitle(task.title);
+      setDesc(task.description);
+      setPriority(task.priority);
+      setDueDate(task.dueDate);
+    }
+  }, [task, editing]);
+
+  useEffect(() => {
+    if (editing) {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    }
+  }, [editing]);
 
   const save = useCallback(() => {
+    setError("");
+
+    if (!title.trim()) {
+      setError("Title is required");
+      return;
+    }
+
     updateTask(task.id, {
-      title,
+      title: title.trim(),
       description: desc,
       priority,
       dueDate,
     });
     setEditing(false);
-  }, [title, desc, priority, dueDate]);
+  }, [title, desc, priority, dueDate, updateTask, task.id]);
 
-  useClickOutside(ref, save, editing);
+  const discard = useCallback(() => {
+    setError("");
+    setTitle(task.title);
+    setDesc(task.description);
+    setPriority(task.priority);
+    setDueDate(task.dueDate);
+    setEditing(false);
+  }, [task]);
 
-  var border = {
+  useClickOutside(ref, discard, editing);
+
+  const border = {
     low: "border-green-400",
     medium: "border-yellow-400",
     high: "border-red-400",
   }[priority];
 
   const { handleKeyDown } = useTaskKeyboard({
-    onSubmit: save,
-    onCancel: () => setEditing(false),
+    onSubmit: save, // Don't submit on Enter inside textarea
+    onCancel: discard,
   });
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const autoResize = () => {
     const el = textareaRef.current;
     if (!el) return;
-
     el.style.height = "auto";
     el.style.height = el.scrollHeight + "px";
   };
@@ -62,20 +97,27 @@ export default function TaskItem({ task, updateTask, deleteTask }: Props) {
           onClick={(e) => e.stopPropagation()}
         >
           <input
+            autoFocus
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              // Bug fix #4 (cont): also clear error as soon as the user starts typing.
+              if (error) setError("");
+            }}
             className="w-full text-lg mb-2 bg-transparent outline-none text-gray-800 dark:text-gray-100"
             onKeyDown={handleKeyDown}
           />
+
+          {error && <p className="text-xs text-red-500 mb-1">{error}</p>}
 
           <textarea
             ref={textareaRef}
             value={desc}
             onChange={(e) => {
-              autoResize();
               setDesc(e.target.value);
+              autoResize();
             }}
-            className="w-full mb-2 bg-transparent outline-none text-sm text-gray-700 dark:text-gray-300"
+            className="w-full mb-2 bg-transparent outline-none text-sm text-gray-700 dark:text-gray-300 resize-none"
             onKeyDown={handleKeyDown}
           />
 
@@ -89,6 +131,7 @@ export default function TaskItem({ task, updateTask, deleteTask }: Props) {
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
+
             <input
               type="date"
               value={dueDate}
@@ -96,27 +139,44 @@ export default function TaskItem({ task, updateTask, deleteTask }: Props) {
               className="text-xs bg-gray-100 dark:bg-gray-700 rounded px-2 py-1"
             />
 
-            <button
-              onClick={save}
-              className="text-xs px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-            >
-              Done
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={save}
+                className="text-xs px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              >
+                Done
+              </button>
+              <button
+                onClick={discard}
+                className="text-xs px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       ) : (
+        // Bug fix (dead code): removed the redundant !editing wrapper since
+        // this entire branch is already the else side of editing ? ... : ...
         <div className="min-w-0">
           <h3
-            className={`break-words font-medium text-lg text-gray-800 dark:text-gray-100 ${task.status === "complete" ? "line-through text-gray-500 dark:text-gray-400" : ""}`}
+            className={`break-words font-medium text-lg text-gray-800 dark:text-gray-100 ${
+              task.status === "complete"
+                ? "line-through text-gray-500 dark:text-gray-400"
+                : ""
+            }`}
           >
             {task.title}
           </h3>
 
           <p
-            className={`text-sm break-words text-gray-600 dark:text-gray-300 mt-1 ${task.status === "complete" ? "line-through  dark:text-gray-400" : ""}`}
+            className={`text-sm break-words text-gray-600 dark:text-gray-300 mt-1 ${
+              task.status === "complete"
+                ? "line-through dark:text-gray-400"
+                : ""
+            }`}
           >
             {task.description}
-            {task.description.length > 100 ? "..." : ""}
           </p>
 
           <p className="text-xs text-gray-400 mt-2">

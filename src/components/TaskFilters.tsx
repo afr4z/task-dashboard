@@ -35,7 +35,7 @@ export default function TaskFilters({
         {["all", "pending", "complete"].map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s as any)}
+            onClick={() => setStatusFilter(s as Status | "all")}
             className={`${base} ${statusFilter === s ? active : idle}`}
           >
             {s}
@@ -47,7 +47,7 @@ export default function TaskFilters({
         {["all", "low", "medium", "high"].map((p) => (
           <button
             key={p}
-            onClick={() => setPriorityFilter(p as any)}
+            onClick={() => setPriorityFilter(p as Priority | "all")}
             className={`${base} ${priorityFilter === p ? active : idle}`}
           >
             {p}
