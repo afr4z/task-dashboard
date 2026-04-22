@@ -20,7 +20,7 @@ export default function TaskFilters({
   const base = "px-3 py-1 text-sm rounded-full transition cursor-pointer";
 
   const active = "bg-gray-800 text-white";
-  const idle = "bg-gray-200 text-gray-700 hover:bg-gray-300";
+  const idle = "bg-gray-200 dark:bg-gray-400 text-gray-700 hover:bg-gray-300";
 
   return (
     <div className="mb-4 space-y-3">
