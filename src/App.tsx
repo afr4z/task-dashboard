@@ -3,6 +3,7 @@ import { useTasks } from "./hooks/useTasks";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import TaskFilters from "./components/TaskFilters";
+import TaskSummary from "./components/TaskSummary";
 
 export default function App() {
   const tasksState = useTasks();
@@ -73,6 +74,7 @@ export default function App() {
           view={view}
         />
       </div>
+      <TaskSummary tasks={tasksState.tasks} />
     </div>
   );
 }

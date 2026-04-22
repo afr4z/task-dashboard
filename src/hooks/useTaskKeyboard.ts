@@ -15,6 +15,9 @@ export function useTaskKeyboard({ onSubmit, onCancel }: Options) {
     }
 
     if (e.key === "Escape") {
+      console.log("Escape pressed");
+      e.preventDefault();
+      e.stopPropagation();
       onCancel?.();
     }
   };
