@@ -197,7 +197,6 @@ export default function TaskItemRow({ task, updateTask, deleteTask }: Props) {
             title="Delete task"
             onClick={(e) => {
               e.stopPropagation();
-              if (!window.confirm("Delete this task?")) return;
               deleteTask(task.id);
             }}
             className="text-xs px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
